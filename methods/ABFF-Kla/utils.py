@@ -22,6 +22,7 @@ from sklearn.metrics import (
 )
 
 
+
 def prepare_input_sequence(raw) -> str:
     if raw is None:
         return ""

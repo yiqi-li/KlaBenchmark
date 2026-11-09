@@ -9,7 +9,7 @@ from typing import Any
 METHOD_NAME = "HybridKla"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "HybridKla" / "protein_split_dataset"
+DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "HybridKla" / "KlaAtlas_benchmark_summary" / "protein_split_dataset"
 DEFAULT_TRAIN_TSV = str(DEFAULT_DATA_DIR / "train.tsv")
 DEFAULT_VAL_TSV = str(DEFAULT_DATA_DIR / "val.tsv")
 DEFAULT_TEST_TSV = str(DEFAULT_DATA_DIR / "test.tsv")
@@ -96,11 +96,7 @@ def make_train_parser() -> argparse.ArgumentParser:
     parser.add_argument("--train_tsv", default=None)
     parser.add_argument("--val_tsv", default=None)
     parser.add_argument("--test_tsv", default=None)
-    parser.add_argument(
-        "--esm2_dir",
-        default=None,
-        help="Hugging Face model ID or local directory for ESM2 (default: facebook/esm2_t30_150M_UR50D).",
-    )
+    parser.add_argument("--esm2_dir", default=None)
     parser.add_argument("--output_dir", default=None)
     parser.add_argument("--out_root", default=None)
     parser.add_argument("--run_name", default=None)
@@ -141,11 +137,7 @@ def make_predict_parser() -> argparse.ArgumentParser:
     parser.add_argument("--feature_model_dir", default=None)
     parser.add_argument("--esm2_finetuned_dir", default=None)
     parser.add_argument("--esm2_state_dict_path", default=None)
-    parser.add_argument(
-        "--esm2_dir",
-        default=None,
-        help="Hugging Face model ID or local directory for ESM2 (default: facebook/esm2_t30_150M_UR50D).",
-    )
+    parser.add_argument("--esm2_dir", default=None)
     parser.add_argument("--device", default=None)
     parser.add_argument("--gpu", default=None)
     parser.add_argument("--seq_len", type=int, default=None)

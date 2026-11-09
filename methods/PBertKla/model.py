@@ -69,7 +69,7 @@ def import_proteinbert_symbols():
     }
 
 
-def _ensure_local_pretrained_dump(pretrained_cache_dir: Path) -> Path:
+def ensure_pretrained_dump(pretrained_cache_dir: Path) -> Path:
     pretrained_cache_dir.mkdir(parents=True, exist_ok=True)
     dump_path = pretrained_cache_dir / "default.pkl"
     if dump_path.exists():
@@ -81,8 +81,8 @@ def _ensure_local_pretrained_dump(pretrained_cache_dir: Path) -> Path:
             "[PBertKla][FATAL] Could not find ProteinBERT pretrained dump file default.pkl.\n"
             f"  - Expected path: {dump_path}\n"
             f"  - Candidate path also missing: {candidate}\n"
-            "Place epoch_92400_sample_23500000.pkl in the directory, or omit --pretrained_cache_dir "
-            "to download from Hugging Face."
+            "Please place epoch_92400_sample_23500000.pkl into the pretrained cache directory.\n"
+            "This implementation does not download weights from the network."
         )
 
     try:
@@ -98,18 +98,16 @@ def _ensure_local_pretrained_dump(pretrained_cache_dir: Path) -> Path:
     return dump_path
 
 
+
 def resolve_pretrained_dump_path(config) -> Path:
     cache_dir = str(getattr(config, "pretrained_cache_dir", "") or "").strip()
     if cache_dir:
-        return _ensure_local_pretrained_dump(Path(cache_dir).expanduser().resolve())
+        return ensure_pretrained_dump(Path(cache_dir).expanduser().resolve())
 
     from huggingface_hub import hf_hub_download
 
-    repo_id = str(getattr(config, "pretrained_hf_repo", "") or "").strip()
-    filename = str(getattr(config, "pretrained_hf_filename", "") or "").strip()
-    if not repo_id or not filename:
-        raise ValueError("pretrained_hf_repo and pretrained_hf_filename must be set for Hugging Face download.")
-
+    repo_id = "Zakia/ProteinBERT"
+    filename = "epoch_92400_sample_23500000.pkl"
     print(f"[PBertKla] Downloading ProteinBERT weights from Hugging Face: {repo_id}/{filename}")
     downloaded = Path(hf_hub_download(repo_id=repo_id, filename=filename))
     print(f"[PBertKla] Using pretrained dump: {downloaded}")

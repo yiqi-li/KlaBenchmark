@@ -6,13 +6,14 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import List
 
+os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
+
 import numpy as np
 import pandas as pd
-import tensorflow
 
 from configs import METHOD_NAME, config_and_overrides_from_args, make_train_parser
 from dataset import build_vocab, clean_sequence, encode_sequences, load_tsv_rows, take_first
-from model import build_model, build_rmsprop
+from model import build_model, build_rmsprop, configure_tensorflow_memory_growth
 from utils import (
     TeeRunLog,
     build_prediction_dataframe,
@@ -73,6 +74,7 @@ def train() -> int:
     if config.gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = str(config.gpu)
         print(f"[DeepKla] CUDA_VISIBLE_DEVICES set to: {os.environ['CUDA_VISIBLE_DEVICES']}", flush=True)
+    configure_tensorflow_memory_growth()
 
     set_seed(config.seed)
     if int(config.seq_len) <= 0:
@@ -143,7 +145,7 @@ def train() -> int:
             "unknown_token": "X",
             "keep_existing_x": True,
             "map_non_standard_to": "X",
-            "center_align_to": config.seq_len,
+            "pad_truncate_to": config.seq_len,
         },
         "train_tsv": config.train_tsv,
         "val_tsv": config.val_tsv,
@@ -156,19 +158,6 @@ def train() -> int:
     )
     x_val = encode_sequences(val_seqs, vocab=vocab, fixed_len=config.seq_len, split_label="val")
     x_test = encode_sequences(test_seqs, vocab=vocab, fixed_len=config.seq_len, split_label="test")
-
-    import tensorflow as tf
-
-    try:
-        gpus = tf.config.list_physical_devices("GPU")
-        if gpus:
-            for gpu in gpus:
-                try:
-                    tf.config.experimental.set_memory_growth(gpu, True)
-                except Exception:
-                    pass
-    except Exception:
-        pass
 
     optimizer = build_rmsprop(learning_rate=float(config.lr))
     model = build_model(

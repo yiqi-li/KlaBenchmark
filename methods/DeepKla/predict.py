@@ -4,12 +4,13 @@ import atexit
 import os
 from pathlib import Path
 
+os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
+
 import numpy as np
-import tensorflow
 
 from configs import Config, METHOD_NAME, config_and_overrides_from_args, make_predict_parser, merge_config
 from dataset import encode_sequences, load_tsv_rows
-from model import load_model
+from model import configure_tensorflow_memory_growth, load_model
 from utils import (
     TeeRunLog,
     build_prediction_dataframe,
@@ -74,6 +75,7 @@ def predict() -> int:
     if config.gpu:
         os.environ["CUDA_VISIBLE_DEVICES"] = str(config.gpu)
         print(f"[DeepKla] CUDA_VISIBLE_DEVICES set to: {os.environ['CUDA_VISIBLE_DEVICES']}", flush=True)
+    configure_tensorflow_memory_growth()
 
     output_dir = resolve_output_dir(config)
     config.output_dir = str(output_dir)

@@ -30,8 +30,5 @@
     "keep_existing_x": true,
     "map_non_standard_to": "X",
     "pad_truncate_to": 51
-  },
-  "train_tsv": "/data/home/yzhang/liyiqi/project/KlaAtlas_ms_new/methods/DeepKla-main/dataset/protein_dataset/split_protein.train.tsv",
-  "val_tsv": "/data/home/yzhang/liyiqi/project/KlaAtlas_ms_new/methods/DeepKla-main/dataset/protein_dataset/split_protein.val.tsv",
-  "test_tsv": "/data/home/yzhang/liyiqi/project/KlaAtlas_ms_new/methods/DeepKla-main/dataset/protein_dataset/split_protein.test.tsv"
+  }
 }

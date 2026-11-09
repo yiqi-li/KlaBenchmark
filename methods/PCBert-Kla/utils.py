@@ -23,6 +23,7 @@ from sklearn.metrics import (
 )
 
 
+
 def prepare_input_sequence(raw) -> str:
     if raw is None:
         return ""
@@ -363,6 +364,7 @@ def build_standard_metrics_payload(
 
 def build_prediction_dataframe(
     source_df: pd.DataFrame,
+    seq_col: str,
     probabilities: np.ndarray,
     threshold: float,
 ) -> pd.DataFrame:
@@ -371,7 +373,7 @@ def build_prediction_dataframe(
 
     standard = {
         "RowId": np.arange(len(frame), dtype=int),
-        "Sequence": frame["Sequence"].astype(str),
+        "Sequence": frame[seq_col].astype(str),
         "Prob": probabilities.astype(float),
         "PredLabel": (probabilities >= float(threshold)).astype(int),
     }
@@ -384,12 +386,12 @@ def build_prediction_dataframe(
     preferred_order.extend(["Prob", "PredLabel"])
 
     standard_df = pd.DataFrame(standard)[preferred_order]
-    extra_cols = [column for column in frame.columns if column not in {"Sequence", "Label"}]
+    extra_cols = [column for column in frame.columns if column not in {seq_col, "Label"}]
     return pd.concat([standard_df, frame[extra_cols].reset_index(drop=True)], axis=1)
 
 
-def validate_prediction_alignment(source_df: pd.DataFrame, expected_sequences: np.ndarray) -> None:
-    source_sequences = source_df["Sequence"].astype(str).to_numpy()
+def validate_prediction_alignment(source_df: pd.DataFrame, seq_col: str, expected_sequences: np.ndarray) -> None:
+    source_sequences = source_df[seq_col].astype(str).to_numpy()
     if len(source_sequences) != len(expected_sequences) or not np.array_equal(source_sequences, expected_sequences.astype(str)):
         raise RuntimeError("Prediction alignment check failed: source rows and extracted sequences do not match.")
 

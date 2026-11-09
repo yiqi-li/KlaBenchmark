@@ -39,16 +39,11 @@
 
 ## Input Format
 
-Training, validation, and test TSV files should contain:
+`Sequence` is a 51 aa window centered on a lysine. `_` pads positions outside the protein.
 
-- `Sequence`
-- `Label`
-
-Prediction requires:
-
-- `Sequence`
-
-`Label` is optional during prediction. If present, `predict.py` also writes metrics.
+- Training TSV: `Sequence` and `Label` (`1` for a Kla site, `0` for a background lysine).
+- Evaluation TSV: the same two columns. `Label` is used to compute metrics.
+- Prediction TSV: `Sequence` is enough. `Label` is optional.
 
 ## Training
 
@@ -76,14 +71,14 @@ python train.py --config /path/to/train_config.json
 
 ## Prediction
 
-```bash
-python predict.py \
-  --checkpoint_path /path/to/output/auto_kla_run/model/best_model.pt \
-  --test_tsv /path/to/input.tsv \
-  --output_dir /path/to/output/auto_kla_predict
-```
+Run this from the repository root. `preprocess.json` is read from `checkpoint/Auto-Kla/`.
 
-If the checkpoint was produced by `train.py`, prediction can infer `preprocess.json` and run metadata from the run directory.
+```bash
+python methods/Auto-Kla/predict.py \
+  --checkpoint_path checkpoint/Auto-Kla/model/best_model.pt \
+  --input_tsv dataset/Auto-Kla/KlaAtlas_benchmark_summary/protein_split_dataset/test.tsv \
+  --output_dir results/Auto-Kla
+```
 
 ## Output Files
 
@@ -110,3 +105,5 @@ Prediction output:
 - `predict_config.json`
 - `results/test_predictions.tsv` (`RowId`, `Sequence`, `Prob`, `PredLabel`)
 - `results/test_metrics.json` when `Label` is available
+
+`Prob` is the predicted probability that the center lysine is a Kla site. `PredLabel` is 1 when `Prob` is at least 0.5.

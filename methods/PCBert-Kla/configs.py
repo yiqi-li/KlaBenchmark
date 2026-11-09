@@ -10,7 +10,7 @@ METHOD_NAME = "PCBert-Kla"
 OFFICIAL_KEEP_BERT_LAYERS = 4
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "PCBert-Kla" / "protein_split_dataset"
+DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "PCBert-Kla" / "KlaAtlas_benchmark_summary" / "protein_split_dataset"
 DEFAULT_TRAIN_TSV = str(DEFAULT_DATA_DIR / "train.tsv")
 DEFAULT_VAL_TSV = str(DEFAULT_DATA_DIR / "val.tsv")
 DEFAULT_TEST_TSV = str(DEFAULT_DATA_DIR / "test.tsv")
@@ -93,19 +93,13 @@ def make_train_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out_root", default=None, help="Root directory used when --output_dir is not provided.")
     parser.add_argument("--run_name", default=None, help="Run subdirectory name under --out_root.")
 
-    parser.add_argument(
-        "--protbert_dir",
-        "--model_name",
-        dest="protbert_dir",
-        default=None,
-        help="Hugging Face model ID or local directory for ProtBert (default: Rostlab/prot_bert_bfd).",
-    )
+    parser.add_argument("--protbert_dir", "--model_name", dest="protbert_dir", default=None)
     parser.add_argument("--keep_bert_layers", type=int, default=None)
     parser.add_argument(
         "--local_files_only",
         action=argparse.BooleanOptionalAction,
         default=None,
-        help="Load ProtBert from local cache/files only (skip Hub download).",
+        help="Load ProtBert from local files only.",
     )
     parser.add_argument(
         "--save_pretrained",
@@ -141,19 +135,13 @@ def make_predict_parser() -> argparse.ArgumentParser:
     parser.add_argument("--scaler_path", default=None, help="Optional override for scaler_model.pkl.")
     parser.add_argument("--run_meta_path", default=None, help="Optional override for run_meta.json.")
 
-    parser.add_argument(
-        "--protbert_dir",
-        "--model_name",
-        dest="protbert_dir",
-        default=None,
-        help="Hugging Face model ID or local directory for ProtBert (default: Rostlab/prot_bert_bfd).",
-    )
+    parser.add_argument("--protbert_dir", "--model_name", dest="protbert_dir", default=None)
     parser.add_argument("--keep_bert_layers", type=int, default=None)
     parser.add_argument(
         "--local_files_only",
         action=argparse.BooleanOptionalAction,
         default=None,
-        help="Load ProtBert from local cache/files only (skip Hub download).",
+        help="Load ProtBert from local files only.",
     )
     parser.add_argument("--device", default=None)
     parser.add_argument("--gpu", default=None, help="Optional CUDA_VISIBLE_DEVICES value.")

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import atexit
+import os
 from dataclasses import asdict
 from pathlib import Path
+
+os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
 
 import numpy as np
 import pandas as pd
@@ -95,30 +98,39 @@ def main() -> int:
 
     train_tsv = ensure_with_contact_tsv(
         config.train_tsv,
-        output_dir=paths.derived_contact_dir,
+        run_dir=paths.derived_contact_dir,
         pdb_dir=config.pdb_dir,
+        cache_dir=config.contact_cache_dir,
         chain_id=config.chain_id,
         cutoff_a=config.contact_cutoff,
         seg_len=config.seq_len,
         report_every=config.report_every,
+        reuse_cache=(not config.no_reuse_contact_cache),
+        force_regen=config.force_regen_contact,
     )
     val_tsv = ensure_with_contact_tsv(
         config.val_tsv,
-        output_dir=paths.derived_contact_dir,
+        run_dir=paths.derived_contact_dir,
         pdb_dir=config.pdb_dir,
+        cache_dir=config.contact_cache_dir,
         chain_id=config.chain_id,
         cutoff_a=config.contact_cutoff,
         seg_len=config.seq_len,
         report_every=config.report_every,
+        reuse_cache=(not config.no_reuse_contact_cache),
+        force_regen=config.force_regen_contact,
     )
     test_tsv = ensure_with_contact_tsv(
         config.test_tsv,
-        output_dir=paths.derived_contact_dir,
+        run_dir=paths.derived_contact_dir,
         pdb_dir=config.pdb_dir,
+        cache_dir=config.contact_cache_dir,
         chain_id=config.chain_id,
         cutoff_a=config.contact_cutoff,
         seg_len=config.seq_len,
         report_every=config.report_every,
+        reuse_cache=(not config.no_reuse_contact_cache),
+        force_regen=config.force_regen_contact,
     )
 
     preprocess = {
@@ -126,7 +138,6 @@ def main() -> int:
         "vocab_size": int(VOCAB_SIZE),
         "aa_to_id": AA_TO_ID,
         "pad_char": "_",
-        "window_align": "center",
         "empty_contact_policy": "empty -> all '_'",
     }
     save_json(paths.preprocess_path, preprocess)
@@ -260,7 +271,7 @@ def main() -> int:
         raise RuntimeError(f"Alignment check failed: len(df_test)={len(df_test_out)} != len(y_prob)={len(y_prob)}")
 
     sig_df = (
-        df_test_out["Context"].fillna("").astype(str).str.upper().str.strip()
+        df_test_out["Sequence"].fillna("").astype(str).str.upper().str.strip()
         + "||"
         + df_test_out["Contact"].fillna("").astype(str).str.upper().str.strip()
         + "||"
@@ -283,7 +294,7 @@ def main() -> int:
             f"used_sig={sig_used[first] if first >= 0 else 'NA'}"
         )
 
-    pred_df = build_standard_prediction_df(df_test_out, y_prob, decision_cutoff, sequence_col="Context")
+    pred_df = build_standard_prediction_df(df_test_out, y_prob, decision_cutoff, sequence_col="Sequence")
     save_predictions(paths.test_predictions_path, pred_df)
 
     val_payload = build_standard_metrics_payload(

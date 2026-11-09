@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 
+
 def prepare_input_sequence(raw) -> str:
     if raw is None:
         return ""

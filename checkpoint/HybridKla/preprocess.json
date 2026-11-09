@@ -1,0 +1,19 @@
+{
+  "seq_len": 51,
+  "meta_feature_order": [
+    "AAINDEX",
+    "ACF",
+    "CKSAAP",
+    "GPS",
+    "OBC",
+    "PSEAAC"
+  ],
+  "features_enabled": [
+    "AAINDEX",
+    "ACF",
+    "CKSAAP",
+    "GPS",
+    "OBC",
+    "PSEAAC"
+  ]
+}

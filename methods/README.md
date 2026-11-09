@@ -33,7 +33,7 @@ Predictions and optional metrics are written under `--output_dir`. Checkpoint fi
 
 ## Pretrained Checkpoints
 
-The `checkpoint/` directory is available from [YiqiLi/KlaBenchmark on Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main). Download the method-specific checkpoint package, then unpack or copy it into the matching local folder:
+Two checkpoint packages are available from [YiqiLi/KlaBenchmark on Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main). `checkpoint/` contains the seed-42 protein-level model. `checkpoint_original/` contains the seed-42 model trained on `External_generalization/original_model_dataset`. Download the package you need, then unpack it into the matching local folder:
 
 ```text
 checkpoint/

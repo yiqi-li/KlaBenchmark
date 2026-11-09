@@ -4,11 +4,11 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-
-from utils import align_raw_sequence, log_seq_len_adjustments, raw_sequence_length
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
+
+from utils import align_raw_sequence, log_seq_len_adjustments, raw_sequence_length
 
 
 def read_tsv(path: str | Path, require_label: bool = True) -> pd.DataFrame:

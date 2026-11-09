@@ -7,6 +7,25 @@ os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
 _ATTENTION_WITH_CONTEXT_CLS = None
 
 
+def configure_tensorflow_memory_growth() -> None:
+    """Avoid TF grabbing nearly all VRAM at process start; must run before GPU ops."""
+    os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
+    try:
+        import tensorflow as tf
+
+        gpus = tf.config.list_physical_devices("GPU")
+        if not gpus:
+            return
+        for gpu in gpus:
+            try:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            except Exception:
+                pass
+        print(f"[DeepKla] TensorFlow GPU memory growth enabled for {len(gpus)} GPU(s).", flush=True)
+    except Exception as exc:
+        print(f"[DeepKla] WARN: failed to configure TensorFlow memory growth: {exc}", flush=True)
+
+
 def build_rmsprop(learning_rate: float):
     import tensorflow as tf
 

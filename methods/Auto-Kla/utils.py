@@ -16,6 +16,7 @@ import torch
 from sklearn.metrics import average_precision_score, confusion_matrix, matthews_corrcoef, roc_auc_score
 
 
+
 def prepare_input_sequence(raw) -> str:
     if raw is None:
         return ""

@@ -5,9 +5,10 @@ import io
 import os
 from pathlib import Path
 
+os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
+
 import numpy as np
 import pandas as pd
-import tensorflow
 
 from configs import METHOD_NAME, config_and_overrides_from_args, make_train_parser
 from dataset import (
@@ -23,6 +24,8 @@ from model import (
     build_finetuning_components,
     build_inference_model,
     configure_tensorflow_environment,
+    configure_tensorflow_memory_growth,
+    import_tensorflow_or_raise,
     save_encoder_artifacts,
 )
 from utils import (
@@ -259,6 +262,7 @@ def train() -> int:
             print(f"[PBertKla] CUDA_VISIBLE_DEVICES already set: {os.environ['CUDA_VISIBLE_DEVICES']} (will not override)")
     else:
         print("[PBertKla] CUDA_VISIBLE_DEVICES not set by script (all GPUs visible).")
+    configure_tensorflow_memory_growth(import_tensorflow_or_raise())
 
     script_dir = Path(__file__).resolve().parent
     output_dir = resolve_output_dir(config)

@@ -4,7 +4,7 @@ import atexit
 import os
 from pathlib import Path
 
-import tensorflow
+os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
 
 from configs import Config, METHOD_NAME, config_and_overrides_from_args, make_predict_parser, merge_config
 from dataset import encode_sequences, load_tsv, read_raw_tsv, validate_prediction_scores
@@ -12,6 +12,8 @@ from model import (
     build_finetuning_components,
     build_inference_model,
     configure_tensorflow_environment,
+    configure_tensorflow_memory_growth,
+    import_tensorflow_or_raise,
     load_encoder_artifacts,
 )
 from utils import (
@@ -108,6 +110,7 @@ def predict() -> int:
             print(f"[PBertKla] CUDA_VISIBLE_DEVICES already set: {os.environ['CUDA_VISIBLE_DEVICES']} (will not override)")
     else:
         print("[PBertKla] CUDA_VISIBLE_DEVICES not set by script (all GPUs visible).")
+    configure_tensorflow_memory_growth(import_tensorflow_or_raise())
 
     script_dir = Path(__file__).resolve().parent
     output_dir = resolve_output_dir(config)

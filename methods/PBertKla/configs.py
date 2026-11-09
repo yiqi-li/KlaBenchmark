@@ -9,12 +9,11 @@ from typing import Any
 METHOD_NAME = "PBertKla"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "PBertKla" / "protein_split_dataset"
+DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "PBertKla" / "KlaAtlas_benchmark_summary" / "protein_split_dataset"
 DEFAULT_TRAIN_TSV = str(DEFAULT_DATA_DIR / "train.tsv")
 DEFAULT_VAL_TSV = str(DEFAULT_DATA_DIR / "val.tsv")
 DEFAULT_TEST_TSV = str(DEFAULT_DATA_DIR / "test.tsv")
-DEFAULT_PRETRAINED_HF_REPO = "Zakia/ProteinBERT"
-DEFAULT_PRETRAINED_HF_FILENAME = "epoch_92400_sample_23500000.pkl"
+DEFAULT_PRETRAINED_CACHE_DIR = ""
 DEFAULT_OUT_ROOT = str(Path(__file__).resolve().parent / "runs")
 
 
@@ -30,9 +29,7 @@ class Config:
     run_meta_path: str = ""
     input_encoder_path: str = ""
     output_spec_path: str = ""
-    pretrained_hf_repo: str = DEFAULT_PRETRAINED_HF_REPO
-    pretrained_hf_filename: str = DEFAULT_PRETRAINED_HF_FILENAME
-    pretrained_cache_dir: str = ""
+    pretrained_cache_dir: str = DEFAULT_PRETRAINED_CACHE_DIR
     gpu: str = ""
     seed: int = 42
     lr_stage1: float = 2e-3
@@ -101,27 +98,7 @@ def make_train_parser() -> argparse.ArgumentParser:
     parser.add_argument("--epoch", "--epochs", dest="epochs", type=int, default=None)
     parser.add_argument("--final-seq-len", "--final_seq_len", dest="final_seq_len", type=int, default=None)
     parser.add_argument("--n-final-epochs", "--n_final_epochs", dest="n_final_epochs", type=int, default=None)
-    parser.add_argument(
-        "--pretrained-hf-repo",
-        "--pretrained_hf_repo",
-        dest="pretrained_hf_repo",
-        default=None,
-        help="Hugging Face repo ID for ProteinBERT pretraining dump (default: Zakia/ProteinBERT).",
-    )
-    parser.add_argument(
-        "--pretrained-hf-filename",
-        "--pretrained_hf_filename",
-        dest="pretrained_hf_filename",
-        default=None,
-        help="Weight filename in the Hugging Face repo.",
-    )
-    parser.add_argument(
-        "--pretrained-cache-dir",
-        "--pretrained_cache_dir",
-        dest="pretrained_cache_dir",
-        default=None,
-        help="Optional local directory with ProteinBERT dump files (overrides Hub download).",
-    )
+    parser.add_argument("--pretrained-cache-dir", "--pretrained_cache_dir", dest="pretrained_cache_dir", default=None)
     parser.add_argument("--decision_threshold", type=float, default=None)
     return parser
 
@@ -136,27 +113,7 @@ def make_predict_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run_meta_path", default=None)
     parser.add_argument("--input_encoder_path", default=None)
     parser.add_argument("--output_spec_path", default=None)
-    parser.add_argument(
-        "--pretrained-hf-repo",
-        "--pretrained_hf_repo",
-        dest="pretrained_hf_repo",
-        default=None,
-        help="Hugging Face repo ID for ProteinBERT pretraining dump (default: Zakia/ProteinBERT).",
-    )
-    parser.add_argument(
-        "--pretrained-hf-filename",
-        "--pretrained_hf_filename",
-        dest="pretrained_hf_filename",
-        default=None,
-        help="Weight filename in the Hugging Face repo.",
-    )
-    parser.add_argument(
-        "--pretrained-cache-dir",
-        "--pretrained_cache_dir",
-        dest="pretrained_cache_dir",
-        default=None,
-        help="Optional local directory with ProteinBERT dump files (overrides Hub download).",
-    )
+    parser.add_argument("--pretrained-cache-dir", "--pretrained_cache_dir", dest="pretrained_cache_dir", default=None)
     parser.add_argument("--gpu", default=None)
     parser.add_argument("--batch_size", type=int, default=None)
     parser.add_argument("--seq_len", type=int, default=None)

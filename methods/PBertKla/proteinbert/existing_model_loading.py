@@ -1,6 +1,5 @@
 import os
 import shutil
-from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -9,8 +8,8 @@ from tensorflow import keras
 from . import conv_and_global_attention_model
 from .model_generation import load_pretrained_model_from_dump
 
+from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-# PBertKla loads weights via model.resolve_pretrained_dump_path() (Hugging Face Hub by default).
 DEFAULT_LOCAL_MODEL_DUMP_DIR = str(_REPO_ROOT / "external_models" / "proteinBERT")
 DEFAULT_LOCAL_MODEL_DUMP_FILE_NAME = 'default.pkl'
 DEFAULT_REMOTE_MODEL_DUMP_URL = 'https://media.githubusercontent.com/media/nadavbra/proteinbert_data_files/master/epoch_92400_sample_23500000.pkl'

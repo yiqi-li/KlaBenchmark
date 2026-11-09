@@ -179,7 +179,7 @@ def predict() -> None:
     tokenizer, bert, classifier, scaler, max_length_tokens = load_model(config, cache_dir, device)
 
     input_df = load_tsv(Path(config.test_tsv))
-    sequences, labels = extract_sequences_and_labels(input_df, require_label=False)
+    sequences, labels, seq_col = extract_sequences_and_labels(input_df, require_label=False)
     has_labels = labels is not None
 
     warn_raw_seq_len_adjustments(sequences, int(config.seq_len), split_label="predict")
@@ -198,9 +198,10 @@ def predict() -> None:
 
     y_true, y_prob = predict_scores(classifier, bert, data_loader, device, has_labels=has_labels)
     input_df_used = input_df.iloc[: len(sequences)].copy()
-    validate_prediction_alignment(input_df_used, sequences)
+    validate_prediction_alignment(input_df_used, seq_col, sequences)
     prediction_frame = build_prediction_dataframe(
         input_df_used,
+        seq_col=seq_col,
         probabilities=y_prob,
         threshold=float(config.decision_threshold),
     )

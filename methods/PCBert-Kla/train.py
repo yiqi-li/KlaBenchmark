@@ -163,9 +163,9 @@ def train() -> None:
     val_df = load_tsv(Path(config.val_tsv))
     test_df = load_tsv(Path(config.test_tsv))
 
-    x_train_raw, y_train = extract_sequences_and_labels(train_df, require_label=True)
-    x_val_raw, y_val = extract_sequences_and_labels(val_df, require_label=True)
-    x_test_raw, y_test = extract_sequences_and_labels(test_df, require_label=True)
+    x_train_raw, y_train, train_seq_col = extract_sequences_and_labels(train_df, require_label=True)
+    x_val_raw, y_val, val_seq_col = extract_sequences_and_labels(val_df, require_label=True)
+    x_test_raw, y_test, test_seq_col = extract_sequences_and_labels(test_df, require_label=True)
 
     assert y_train is not None
     assert y_val is not None
@@ -177,6 +177,9 @@ def train() -> None:
             "method": METHOD_NAME,
             "dataset_name": dataset_name,
             "seq_len": int(config.seq_len),
+            "train_seq_col": train_seq_col,
+            "val_seq_col": val_seq_col,
+            "test_seq_col": test_seq_col,
             "physchem_dim": 27,
             "mode": "finetune_protbert_official_like",
         },
@@ -363,9 +366,10 @@ def train() -> None:
         print(f"{metric_name}: {test_metrics[metric_name]:.6f}")
 
     test_df_used = test_df.iloc[: len(x_test_raw)].copy()
-    validate_prediction_alignment(test_df_used, x_test_raw)
+    validate_prediction_alignment(test_df_used, test_seq_col, x_test_raw)
     prediction_frame = build_prediction_dataframe(
         test_df_used,
+        seq_col=test_seq_col,
         probabilities=y_test_prob,
         threshold=decision_cutoff,
     )
@@ -400,6 +404,9 @@ def train() -> None:
             "paths": {key: str(value) for key, value in asdict(paths).items()},
             "config": config.to_dict(),
             "device": str(device),
+            "train_seq_col": train_seq_col,
+            "val_seq_col": val_seq_col,
+            "test_seq_col": test_seq_col,
             "n_train": int(len(y_train)),
             "n_val": int(len(y_val)),
             "n_test": int(len(y_test)),

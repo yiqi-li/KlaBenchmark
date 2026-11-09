@@ -41,16 +41,11 @@
 
 ## Input Format
 
-Training, validation, and test TSV files should contain:
+`Sequence` is a 45 aa window centered on a lysine. `_` pads positions outside the protein. ProteinBERT adds its own start and end tokens and does not count them in `seq_len`.
 
-- `Sequence`
-- `Label`
-
-Prediction requires:
-
-- `Sequence`
-
-`Label` is optional during prediction. If present, `predict.py` also writes metrics.
+- Training TSV: `Sequence` and `Label` (`1` for a Kla site, `0` for a background lysine).
+- Evaluation TSV: the same two columns. `Label` is used to compute metrics.
+- Prediction TSV: `Sequence` is enough. `Label` is optional.
 
 ## Training
 
@@ -67,7 +62,6 @@ python train.py \
   --train_tsv /path/to/train.tsv \
   --val_tsv /path/to/val.tsv \
   --test_tsv /path/to/test.tsv \
-  --pretrained_hf_repo Zakia/ProteinBERT \
   --output_dir /path/to/output/pbertkla_run
 ```
 
@@ -79,14 +73,14 @@ python train.py --config /path/to/train_config.json
 
 ## Prediction
 
-```bash
-python predict.py \
-  --checkpoint_path /path/to/output/pbertkla_run/model/best_model.weights.h5 \
-  --test_tsv /path/to/input.tsv \
-  --output_dir /path/to/output/pbertkla_predict
-```
+Run this from the repository root. Place `model/extra/input_encoder.pkl` and `model/extra/output_spec.pkl` next to the checkpoint. The ProteinBERT backbone is downloaded from [Zakia/ProteinBERT](https://huggingface.co/Zakia/ProteinBERT) unless `--pretrained_cache_dir` points to a local copy.
 
-If the checkpoint was produced by `train.py`, prediction can infer encoder artifacts and run metadata from `model/extra/`.
+```bash
+python methods/PBertKla/predict.py \
+  --checkpoint_path checkpoint/PBertKla/model/best_model.weights.h5 \
+  --input_tsv dataset/PBertKla/KlaAtlas_benchmark_summary/protein_split_dataset/test.tsv \
+  --output_dir results/PBertKla
+```
 
 ## Output Files
 
@@ -117,3 +111,5 @@ Prediction output:
 - `predict_config.json`
 - `predictions.tsv` (`RowId`, `Sequence`, `Prob`, `PredLabel`)
 - `predict_metrics.json` when `Label` is available
+
+`Prob` is the predicted probability that the center lysine is a Kla site. `PredLabel` is 1 when `Prob` is at least 0.5.

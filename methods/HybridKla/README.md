@@ -37,16 +37,11 @@
 
 ## Input Format
 
-Training, validation, and test TSV files should contain:
+`Sequence` is a 51 aa window centered on a lysine. `_` pads positions outside the protein.
 
-- `Sequence`
-- `Label`
-
-Prediction requires:
-
-- `Sequence`
-
-`Label` is optional during prediction. If present, `predict.py` also writes metrics.
+- Training TSV: `Sequence` and `Label` (`1` for a Kla site, `0` for a background lysine).
+- Evaluation TSV: the same two columns. `Label` is used to compute metrics.
+- Prediction TSV: `Sequence` is enough. `Label` is optional.
 
 ## Training
 
@@ -75,14 +70,14 @@ python train.py --config /path/to/train_config.json
 
 ## Prediction
 
-```bash
-python predict.py \
-  --checkpoint_path /path/to/output/hybridkla_run/model/best_model.pth \
-  --test_tsv /path/to/input.tsv \
-  --output_dir /path/to/output/hybridkla_predict
-```
+Run this from the repository root. The branch weights under `checkpoint/HybridKla/model/extra/` must be present next to `best_model.pth`.
 
-If the checkpoint was produced by `train.py`, prediction can infer GPS encoder, LSTM vocabulary, feature DNN weights, ESM2 weights, and meta feature order from `model/extra/`.
+```bash
+python methods/HybridKla/predict.py \
+  --checkpoint_path checkpoint/HybridKla/model/best_model.pth \
+  --input_tsv dataset/HybridKla/KlaAtlas_benchmark_summary/protein_split_dataset/test.tsv \
+  --output_dir results/HybridKla
+```
 
 ## Output Files
 
@@ -112,4 +107,6 @@ Prediction output:
 - `predict_config.json`
 - `predictions.tsv` (`RowId`, `Sequence`, `Prob`, `PredLabel`)
 - `predict_metrics.json` when `Label` is available
+
+`Prob` is the predicted probability that the center lysine is a Kla site. `PredLabel` is 1 when `Prob` is at least 0.5.
 

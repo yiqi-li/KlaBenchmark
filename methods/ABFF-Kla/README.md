@@ -69,7 +69,7 @@ python train.py \
 
 ### Prediction input
 
-Prediction requires `Context` or `Sequence`. `Contact` and `Label` are optional; if `Contact` is missing, `predict.py` generates it from `--pdb_dir` in the same way as `train.py`.
+For a new prediction, provide `Sequence` or `Context` as a 35 aa window centered on the lysine. The released benchmark files already contain `Contact`, so `--pdb_dir` is not needed for those files. If `Contact` is absent, also provide `ACC_ID` and `Mod_positions`, and pass `--pdb_dir`. `Label` is optional and is used only to compute metrics.
 
 ## Training
 
@@ -98,15 +98,16 @@ python train.py --config /path/to/train_config.json
 
 ## Prediction
 
+Run this from the repository root. The protein-level test file in this repository already contains `Contact`.
+
 ```bash
-python predict.py \
-  --checkpoint_path /path/to/output/abff_kla_run/model/best_model.keras \
-  --test_tsv /path/to/input.tsv \
-  --pdb_dir /path/to/alphafold_pdb \
-  --output_dir /path/to/output/abff_kla_predict
+python methods/ABFF-Kla/predict.py \
+  --checkpoint_path checkpoint/ABFF-Kla/model/best_model.keras \
+  --input_tsv dataset/ABFF-Kla/KlaAtlas_benchmark_summary/protein_split_dataset/test.tsv \
+  --output_dir results/ABFF-Kla
 ```
 
-If the checkpoint was produced by `train.py`, prediction can infer `preprocess.json` and `run_meta.json` from the run directory.
+Add `--pdb_dir` only when the input has no `Contact` column.
 
 ## Output Files
 
@@ -132,3 +133,5 @@ Prediction output:
 - `predict_config.json`
 - `results/test_predictions.tsv` (`RowId`, `Sequence`, `Prob`, `PredLabel`)
 - `results/test_metrics.json` when `Label` is available
+
+`Prob` is the predicted probability that the center lysine is a Kla site. `PredLabel` is 1 when `Prob` is at least 0.5.

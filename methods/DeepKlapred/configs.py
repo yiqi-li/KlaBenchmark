@@ -9,7 +9,7 @@ from typing import Any
 METHOD_NAME = "DeepKlapred"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "DeepKlapred" / "protein_split_dataset"
+DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "DeepKlapred" / "KlaAtlas_benchmark_summary" / "protein_split_dataset"
 DEFAULT_TRAIN_TSV = str(DEFAULT_DATA_DIR / "train.tsv")
 DEFAULT_VAL_TSV = str(DEFAULT_DATA_DIR / "val.tsv")
 DEFAULT_TEST_TSV = str(DEFAULT_DATA_DIR / "test.tsv")

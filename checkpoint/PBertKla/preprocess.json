@@ -14,5 +14,7 @@
     0,
     1
   ],
-  "seq_len_for_training": 45
+  "seq_len": 45,
+  "seq_len_semantics": "raw_amino_acid_length_excluding_START_END",
+  "proteinbert_token_len": 47
 }

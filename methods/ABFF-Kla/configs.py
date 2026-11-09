@@ -9,12 +9,13 @@ from typing import Any
 METHOD_NAME = "ABFF-Kla"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "ABFF-Kla" / "protein_split_dataset"
+DEFAULT_DATA_DIR = REPO_ROOT / "dataset" / "ABFF-Kla" / "KlaAtlas_benchmark_summary" / "protein_split_dataset"
 DEFAULT_TRAIN_TSV = str(DEFAULT_DATA_DIR / "train.tsv")
 DEFAULT_VAL_TSV = str(DEFAULT_DATA_DIR / "val.tsv")
 DEFAULT_TEST_TSV = str(DEFAULT_DATA_DIR / "test.tsv")
 DEFAULT_OUT_ROOT = str(Path(__file__).resolve().parent / "runs")
 DEFAULT_PDB_DIR = str(REPO_ROOT / "external_models" / "alphafold_pdb")
+DEFAULT_CONTACT_CACHE_DIR = str(Path(__file__).resolve().parent / "contact_cache")
 
 
 @dataclass
@@ -44,6 +45,9 @@ class Config:
     pdb_dir: str = DEFAULT_PDB_DIR
     chain_id: str = "A"
     contact_cutoff: float = 10.0
+    contact_cache_dir: str = DEFAULT_CONTACT_CACHE_DIR
+    force_regen_contact: bool = False
+    no_reuse_contact_cache: bool = False
     decision_threshold: float = 0.5
     report_every: int = 50000
 
@@ -107,6 +111,9 @@ def make_train_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pdb_dir", default=None)
     parser.add_argument("--chain_id", default=None)
     parser.add_argument("--contact_cutoff", type=float, default=None)
+    parser.add_argument("--contact_cache_dir", default=None)
+    parser.add_argument("--force_regen_contact", action="store_true", default=None)
+    parser.add_argument("--no_reuse_contact_cache", action="store_true", default=None)
     parser.add_argument("--decision_threshold", type=float, default=None)
     parser.add_argument("--report_every", type=int, default=None)
     return parser
@@ -128,6 +135,9 @@ def make_predict_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pdb_dir", default=None)
     parser.add_argument("--chain_id", default=None)
     parser.add_argument("--contact_cutoff", type=float, default=None)
+    parser.add_argument("--contact_cache_dir", default=None)
+    parser.add_argument("--force_regen_contact", action="store_true", default=None)
+    parser.add_argument("--no_reuse_contact_cache", action="store_true", default=None)
     parser.add_argument("--decision_threshold", type=float, default=None)
     parser.add_argument("--report_every", type=int, default=None)
     return parser

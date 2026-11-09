@@ -109,9 +109,7 @@ def predict() -> None:
     print(f"[{now_ts()}] Building inputs for prediction...")
     x_ids = build_embedding_inputs(input_seqs, max_len_with_cls, split_label="predict")
     x_desc, feature_columns = make_features_for_split(
-        input_seqs,
-        feature_columns=feature_columns,
-        raw_seq_len=max_seq_len,
+        input_seqs, feature_columns=feature_columns, raw_seq_len=max_seq_len
     )
 
     checkpoint = torch.load(config.checkpoint_path, map_location=device)

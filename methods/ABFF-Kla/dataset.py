@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import time
 from collections import Counter
 from pathlib import Path
@@ -7,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from utils import center_align_length, log_seq_len_adjustments, raw_sequence_length
+from utils import center_align_length, load_json, log_seq_len_adjustments, now_ts, raw_sequence_length, save_json
 
 AA20 = list("ACDEFGHIKLMNPQRSTVWY")
 AA_TO_ID = {"_": 0}
@@ -58,20 +59,27 @@ def encode_seq(sequence: str, length: int) -> np.ndarray:
     return ids
 
 
+def ensure_sequence_column(df: pd.DataFrame) -> pd.DataFrame:
+    if "Sequence" not in df.columns and "Context" in df.columns:
+        df = df.rename(columns={"Context": "Sequence"})
+    if "Context" in df.columns:
+        df = df.drop(columns=["Context"])
+    return df
+
+
 def load_split_tsv(path: str, require_label: bool = True):
     df = pd.read_csv(path, sep="\t", dtype=str)
-    if ("Context" not in df.columns) and ("Sequence" in df.columns):
-        df["Context"] = df["Sequence"]
-    required = ["Context", "Contact"]
+    df = ensure_sequence_column(df)
+    required = ["Sequence", "Contact"]
     if require_label:
         required.append("Label")
     for column in required:
         if column not in df.columns:
             raise ValueError(f"Missing column {column} in {path}. Found: {list(df.columns)}")
-    ctx = df["Context"].fillna("").astype(str).values
+    seq = df["Sequence"].fillna("").astype(str).values
     cont = df["Contact"].fillna("").astype(str).values
     labels = df["Label"].astype(int).values if "Label" in df.columns else None
-    return df, ctx, cont, labels
+    return df, seq, cont, labels
 
 
 def encode_pair(
@@ -88,7 +96,7 @@ def encode_pair(
             [raw_sequence_length(sequence) for sequence in ctx_arr],
             int(length),
             method_label=method_label,
-            split_label=f"{split_label} Context".strip(),
+            split_label=f"{split_label} Sequence".strip(),
         )
         cont_lengths = [raw_sequence_length(sequence) for sequence in cont_arr if normalize_seq(sequence) != ""]
         if cont_lengths:
@@ -109,6 +117,17 @@ def encode_pair(
         cont_fixed.append(sequence)
     cont_x = np.stack([encode_seq(sequence, length) for sequence in cont_fixed], axis=0)
     return acid_x, cont_x, empty_count
+
+
+def sha256_file(path: str, chunk_size: int = 1024 * 1024) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        while True:
+            block = handle.read(chunk_size)
+            if not block:
+                break
+            digest.update(block)
+    return digest.hexdigest()
 
 
 class AFContactSegmenter:
@@ -279,10 +298,11 @@ class AFContactSegmenter:
         for column in ["ACC_ID", "Mod_positions"]:
             if column not in df.columns:
                 raise ValueError(f"{in_tsv} is missing required column {column}; found {list(df.columns)}")
-        if ("Context" not in df.columns) and ("Sequence" not in df.columns):
-            raise ValueError(f"{in_tsv} must contain Context or Sequence; found {list(df.columns)}")
+        df = ensure_sequence_column(df)
+        if "Sequence" not in df.columns:
+            raise ValueError(f"{in_tsv} must contain Sequence; found {list(df.columns)}")
 
-        ctx_series = df["Context"] if "Context" in df.columns else df["Sequence"]
+        seq_series = df["Sequence"]
         contact_segments = []
         stats = Counter()
 
@@ -364,7 +384,7 @@ class AFContactSegmenter:
             progress.close()
 
         df["Contact"] = contact_segments
-        df["Context"] = ctx_series.fillna("")
+        df["Sequence"] = seq_series.fillna("")
         out_path = Path(out_tsv)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(out_path, sep="\t", index=False)
@@ -373,31 +393,60 @@ class AFContactSegmenter:
 
 def ensure_with_contact_tsv(
     in_tsv: str,
-    output_dir: Path,
+    run_dir: Path,
     pdb_dir: str,
+    cache_dir: str,
     chain_id: str = "A",
     cutoff_a: float = 10.0,
     seg_len: int = 31,
     report_every: int = 50000,
+    reuse_cache: bool = True,
+    force_regen: bool = False,
 ) -> str:
     in_tsv = str(in_tsv)
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    run_dir = Path(run_dir)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
     head = pd.read_csv(in_tsv, sep="\t", dtype=str, nrows=1)
     cols = set(head.columns)
-    if ("Contact" in cols) and (("Context" in cols) or ("Sequence" in cols)):
+    if ("Contact" in cols) and (("Sequence" in cols) or ("Context" in cols)):
         return in_tsv
 
+    in_abs = str(Path(in_tsv).resolve())
+    in_hash = sha256_file(in_tsv)
+    param_sig = f"L{int(seg_len)}_cut{float(cutoff_a)}_chain{chain_id}_pdb{str(Path(pdb_dir).resolve())}"
+    key = hashlib.sha256((in_hash + "|" + param_sig).encode("utf-8")).hexdigest()[:16]
+    out_path = cache_dir / f"{Path(in_tsv).stem}.with_contact.{key}.tsv"
+    meta_path = cache_dir / f"{Path(in_tsv).stem}.with_contact.{key}.meta.json"
+
+    if reuse_cache and (not force_regen) and out_path.exists() and meta_path.exists():
+        try:
+            meta = load_json(meta_path)
+            ok = (
+                meta.get("source", {}).get("path") == in_abs
+                and meta.get("source", {}).get("sha256") == in_hash
+                and meta.get("params", {}).get("seg_len") == int(seg_len)
+                and float(meta.get("params", {}).get("cutoff_a")) == float(cutoff_a)
+                and meta.get("params", {}).get("chain_id") == str(chain_id)
+                and str(Path(meta.get("params", {}).get("pdb_dir")).resolve()) == str(Path(pdb_dir).resolve())
+                and meta.get("output", {}).get("tsv") == str(out_path)
+            )
+            if ok:
+                print(f"\n[contact] cache hit: {out_path}")
+                return str(out_path)
+        except Exception:
+            pass
+
     required_raw_common = {"ACC_ID", "Mod_positions"}
-    has_ctx = ("Context" in cols) or ("Sequence" in cols)
-    if (not required_raw_common.issubset(cols)) or (not has_ctx):
+    has_seq = ("Sequence" in cols) or ("Context" in cols)
+    if (not required_raw_common.issubset(cols)) or (not has_seq):
         raise ValueError(
             f"Input TSV is neither a with-contact TSV nor a raw TSV that can generate contact sequences. "
-            f"Expected columns {sorted(required_raw_common)} plus Context/Sequence; got {list(head.columns)}; path={in_tsv}"
+            f"Expected columns {sorted(required_raw_common)} plus Sequence; got {list(head.columns)}; path={in_tsv}"
         )
 
-    out_path = output_dir / f"{Path(in_tsv).stem}.with_contact.tsv"
     segmenter = AFContactSegmenter(
         pdb_dir=Path(pdb_dir),
         chain_id=chain_id,
@@ -407,4 +456,20 @@ def ensure_with_contact_tsv(
     stats, saved = segmenter.process_tsv(in_tsv, out_path, report_every=report_every)
     print(f"\n[contact] generated: {saved}")
     print(f"[contact] stats: {dict(stats)}\n")
+
+    meta = {
+        "source": {"path": in_abs, "sha256": in_hash},
+        "params": {
+            "pdb_dir": str(Path(pdb_dir).resolve()),
+            "chain_id": str(chain_id),
+            "cutoff_a": float(cutoff_a),
+            "seg_len": int(seg_len),
+            "report_every": int(report_every),
+        },
+        "output": {"tsv": str(out_path)},
+        "created_at": now_ts(),
+        "stats": {k: int(v) for k, v in stats.items()},
+    }
+    save_json(meta_path, meta)
+    print(f"[contact] meta saved: {meta_path}\n")
     return saved

@@ -2,27 +2,41 @@
 
 KlaBenchmark is a benchmark-oriented code and dataset collection for lysine lactylation (Kla) site prediction. It provides standardized datasets and reproducible implementations of seven published Kla predictors:
 
+- PCBert-Kla
+- HybridKla
+- PBertKla
+- DeepKlapred
 - ABFF-Kla
 - Auto-Kla
 - DeepKla
-- DeepKlapred
-- HybridKla
-- PBertKla
-- PCBert-Kla
 
-The repository supports downloading pretrained weights and benchmark data from [YiqiLi/KlaBenchmark on Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main), running prediction with `predict.py`, and retraining with `train.py` under comparable evaluation protocols.
+Published Kla predictors were trained and scored on different datasets and background-lysine definitions, so those published numbers cannot be compared with one another. KlaBenchmark keeps the same KlaAtlas sites, splits, and evaluation protocol for all seven methods.
+
+The seven implementations share one training and prediction interface and the partitions reported in Supplementary Table S6. Those resources cover the protein-level and sequence-similarity splits, alternative background definitions, fixed sequence windows, species-specific training, cross-species transfer, and independent DIA tests. Prediction and retraining use `predict.py` and `train.py`. Complete data and weights are on [YiqiLi/KlaBenchmark at Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main).
 
 ## Repository Layout
 
 ```text
 KlaBenchmark/
-├── checkpoint/       # Pretrained model checkpoints and preprocessing metadata
-├── dataset/          # Complete benchmark datasets and dataset documentation
+├── checkpoint/       # Preprocessing metadata; model weights are on Hugging Face
+├── dataset/          # Benchmark TSVs grouped as in Supplementary Table S6
 ├── methods/          # Model code and usage guide
-├── report/           # Reporting and plotting utilities
+├── report/           # ROC and PRC plotting utility
 ├── LICENSE
 └── README.md
 ```
+
+## Data and Pretrained Models
+
+Code and the smaller data files are in this repository. The complete benchmark and the trained weights are on [Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main).
+
+| GitHub | Hugging Face |
+| --- | --- |
+| Source code for the seven predictors | Complete benchmark datasets and pretrained model weights |
+| Protein-level split and original-model datasets | The remaining partitions |
+| Project documentation | Extra files required for prediction |
+
+On GitHub, each method folder contains `KlaAtlas_benchmark_summary/protein_split_dataset/` and `External_generalization/original_model_dataset/`. Hugging Face adds sequence-similarity, background, window-length, species, cross-species, unseen-site, and DIA partitions under the same seven group names. `checkpoint/` holds the seed-42 protein-level weights. `checkpoint_original/` holds the seed-42 weights trained on each method's original corpus. Place a downloaded package in the matching local folder. PCBert-Kla also needs `model/extra/scaler_model.pkl`, PBertKla needs its encoder files, and HybridKla needs its branch files. See `dataset/README.md` for the directory layout.
 
 ## Installation
 
@@ -34,12 +48,13 @@ See `methods/README.md` for details.
 
 ## Quick Start
 
-Download model weights from [YiqiLi/KlaBenchmark on Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main), then place each method's weights and metadata into the matching folder under `checkpoint/<method>/`.
-After the checkpoint files are in place, run:
+Download model weights from [YiqiLi/KlaBenchmark on Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main). Place the protein-level weights in `checkpoint/<method>/`, or the original-corpus weights in `checkpoint_original/<method>/`.
+
+`<method>` is one of the seven folder names: `PCBert-Kla`, `HybridKla`, `PBertKla`, `DeepKlapred`, `ABFF-Kla`, `Auto-Kla`, or `DeepKla`. `<checkpoint_file>` depends on the method. Per-method commands and the extra files some predictors require are in [`methods/README.md`](methods/README.md).
 
 ```bash
 python methods/<method>/predict.py \
-  --checkpoint_path <path/to/downloaded/checkpoint> \
+  --checkpoint_path checkpoint/<method>/model/<checkpoint_file> \
   --input_tsv <path/to/input.tsv> \
   --output_dir <path/to/output>
 ```
@@ -48,21 +63,23 @@ python methods/<method>/predict.py \
 
 ```bash
 python methods/<method>/train.py \
-  --train_tsv <path/to/train.tsv> \
-  --val_tsv <path/to/val.tsv> \
-  --test_tsv <path/to/test.tsv> \
+  --train_tsv dataset/<method>/KlaAtlas_benchmark_summary/protein_split_dataset/train.tsv \
+  --val_tsv dataset/<method>/KlaAtlas_benchmark_summary/protein_split_dataset/val.tsv \
+  --test_tsv dataset/<method>/KlaAtlas_benchmark_summary/protein_split_dataset/test.tsv \
   --run_name <run_name>
 ```
 
 ## Documentation
 
-- **`dataset/README.md`** — [Hugging Face data release](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main), required columns, benchmark partitions, label definitions
-- **`methods/README.md`** — installation, prediction and training workflows, benchmark scenarios, external model resources, reporting guidelines
-- **`report/plot_roc_prc.py`** — utility for plotting ROC and PRC curves from benchmark outputs
+- `dataset/README.md`: partition layout and label definitions
+- `methods/README.md`: installation, prediction, training, and external model resources
+- `report/plot_roc_prc.py`: plot ROC and PRC curves from prediction files
+
+Performance on these partitions is reported in Supplementary Table S6.
 
 ## License
 
-Code in this repository is released under the MIT License. Datasets and third-party model weights may be subject to separate terms; see `dataset/README.md` and `methods/README.md`.
+The [MIT License](LICENSE) applies to the code in this repository, including `methods/` and `report/`, together with the documentation shipped with that code. Datasets and third-party model weights may be subject to separate terms; see `dataset/README.md` and `methods/README.md`.
 
 ## Authors
 
@@ -71,4 +88,4 @@ Code in this repository is released under the MIT License. Datasets and third-pa
 
 ## Citation
 
-Please cite the following paper if you use KlaBenchmark:
+Please cite the KlaBenchmark manuscript if you use this repository.

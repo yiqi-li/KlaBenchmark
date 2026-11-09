@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import atexit
+import os
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
+
+os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
 
 import numpy as np
 import tensorflow
@@ -138,12 +141,15 @@ def main() -> int:
 
     test_tsv = ensure_with_contact_tsv(
         config.test_tsv,
-        output_dir=cache_dir,
+        run_dir=cache_dir,
         pdb_dir=config.pdb_dir,
+        cache_dir=config.contact_cache_dir,
         chain_id=config.chain_id,
         cutoff_a=config.contact_cutoff,
         seg_len=int(preprocess["L"]),
         report_every=config.report_every,
+        reuse_cache=(not config.no_reuse_contact_cache),
+        force_regen=config.force_regen_contact,
     )
 
     df_input, input_ctx, input_cont, input_labels = load_split_tsv(test_tsv, require_label=False)
@@ -153,7 +159,7 @@ def main() -> int:
 
     model = load_trained_model(config.checkpoint_path)
     y_prob = model.predict([x_acid, x_cont], batch_size=int(config.batch_size), verbose=0).reshape(-1)
-    pred_df = build_standard_prediction_df(df_input.reset_index(drop=True), y_prob, float(config.decision_threshold), "Context")
+    pred_df = build_standard_prediction_df(df_input.reset_index(drop=True), y_prob, float(config.decision_threshold), "Sequence")
     save_predictions(results_dir / "test_predictions.tsv", pred_df)
 
     predict_meta: dict[str, Any] = {

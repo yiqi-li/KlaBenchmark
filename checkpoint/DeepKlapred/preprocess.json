@@ -769,8 +769,5 @@
     "DDE398",
     "DDE399",
     "DDE400"
-  ],
-  "train_tsv": "/data/home/yzhang/liyiqi/project/KlaAtlas_ms_new/methods/DeepKlapred-main/dataset/protein_dataset/split_protein.train.tsv",
-  "val_tsv": "/data/home/yzhang/liyiqi/project/KlaAtlas_ms_new/methods/DeepKlapred-main/dataset/protein_dataset/split_protein.val.tsv",
-  "test_tsv": "/data/home/yzhang/liyiqi/project/KlaAtlas_ms_new/methods/DeepKlapred-main/dataset/protein_dataset/split_protein.test.tsv"
+  ]
 }

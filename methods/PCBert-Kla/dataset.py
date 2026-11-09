@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Sequence
 
 import numpy as np
-
-from utils import align_raw_sequence, log_seq_len_adjustments, raw_sequence_length
 import pandas as pd
 import torch
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from torch.utils.data import Dataset
+
+from utils import align_raw_sequence, log_seq_len_adjustments, raw_sequence_length
 
 STANDARD_AA = set("ACDEFGHIKLMNPQRSTVWY")
 AA_ORDER = list("ACDEFGHIKLMNPQRSTVWY")
@@ -22,10 +22,16 @@ def load_tsv(path) -> pd.DataFrame:
 
 def extract_sequences_and_labels(
     df: pd.DataFrame,
+    seq_col_candidates: Sequence[str] = ("Sequence", "Context_31aa"),
     require_label: bool = True,
-) -> tuple[np.ndarray, np.ndarray | None]:
-    if "Sequence" not in df.columns:
-        raise ValueError(f"Missing Sequence column. Columns={list(df.columns)}")
+) -> tuple[np.ndarray, np.ndarray | None, str]:
+    seq_col = None
+    for column in seq_col_candidates:
+        if column in df.columns:
+            seq_col = column
+            break
+    if seq_col is None:
+        raise ValueError(f"Missing sequence column. Candidates={tuple(seq_col_candidates)}, columns={list(df.columns)}")
 
     labels: np.ndarray | None = None
     if "Label" in df.columns:
@@ -33,8 +39,8 @@ def extract_sequences_and_labels(
     elif require_label:
         raise ValueError(f"Missing Label column. Columns={list(df.columns)}")
 
-    sequences = df["Sequence"].astype(str).to_numpy()
-    return sequences, labels
+    sequences = df[seq_col].astype(str).to_numpy()
+    return sequences, labels, seq_col
 
 
 def sanitize_for_embedding(seq: str) -> str:
