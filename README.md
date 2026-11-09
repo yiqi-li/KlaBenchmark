@@ -10,16 +10,16 @@ KlaBenchmark is a benchmark-oriented code and dataset collection for lysine lact
 - Auto-Kla
 - DeepKla
 
-Published Kla predictors were trained and scored on different datasets and background-lysine definitions, so those published numbers cannot be compared with one another. KlaBenchmark keeps the same KlaAtlas sites, splits, and evaluation protocol for all seven methods.
+Published Kla predictors were trained and scored on different datasets, so those published numbers cannot be compared with one another. KlaBenchmark keeps the same KlaAtlas sites, splits, and evaluation protocol for all seven methods.
 
-The seven implementations share one training and prediction interface and the partitions reported in Supplementary Table S6. Those resources cover the protein-level and sequence-similarity splits, alternative background definitions, fixed sequence windows, species-specific training, cross-species transfer, and independent DIA tests. Prediction and retraining use `predict.py` and `train.py`. Complete data and weights are on [YiqiLi/KlaBenchmark at Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main).
+The seven implementations share one training and prediction interface and the partitions datasets. Those resources cover the protein-level and sequence-similarity splits, alternative background definitions, fixed sequence windows, species-specific training, cross-species transfer, and independent DIA tests. Prediction and retraining use `predict.py` and `train.py`. Complete data and weights are on [YiqiLi/KlaBenchmark at Hugging Face](https://huggingface.co/YiqiLi/KlaBenchmark/tree/main).
 
 ## Repository Layout
 
 ```text
 KlaBenchmark/
 ├── checkpoint/       # Preprocessing metadata; model weights are on Hugging Face
-├── dataset/          # Benchmark TSVs grouped as in Supplementary Table S6
+├── dataset/          # Essential benchmark datasets
 ├── methods/          # Model code and usage guide
 ├── report/           # ROC and PRC plotting utility
 ├── LICENSE
@@ -32,8 +32,8 @@ Code and the smaller data files are in this repository. The complete benchmark a
 
 | GitHub | Hugging Face |
 | --- | --- |
-| Source code for the seven predictors | Complete benchmark datasets and pretrained model weights |
-| Protein-level split and original-model datasets | The remaining partitions |
+| Source code for the seven predictors | Pretrained model weights |
+| Protein-level split datasets and original-model datasets | Complete benchmark datasets |
 | Project documentation | Extra files required for prediction |
 
 On GitHub, each method folder contains `KlaAtlas_benchmark_summary/protein_split_dataset/` and `External_generalization/original_model_dataset/`. Hugging Face adds sequence-similarity, background, window-length, species, cross-species, unseen-site, and DIA partitions under the same seven group names. `checkpoint/` holds the seed-42 protein-level weights. `checkpoint_original/` holds the seed-42 weights trained on each method's original corpus. Place a downloaded package in the matching local folder. PCBert-Kla also needs `model/extra/scaler_model.pkl`, PBertKla needs its encoder files, and HybridKla needs its branch files. See `dataset/README.md` for the directory layout.
@@ -75,7 +75,7 @@ python methods/<method>/train.py \
 - `methods/README.md`: installation, prediction, training, and external model resources
 - `report/plot_roc_prc.py`: plot ROC and PRC curves from prediction files
 
-Performance on these partitions is reported in Supplementary Table S6.
+Performance on these partitions is reported in paper.
 
 ## License
 
